@@ -119,7 +119,7 @@ function EnhancedTableHead(props) {
                     <TableCell
                         key={headCell.id}
                         sortDirection={orderBy === headCell.id ? order : false}
-                        align={headCell.numeric ? 'right' : 'left'}
+                        // align={headCell.numeric ? 'right' : 'left'}
                     >
                         <TableSortLabel
                             active={orderBy === headCell.id}
@@ -423,7 +423,7 @@ export const Projects = () => {
                                             padding="none"
                                             align='center'
                                         >
-                                            {handleNullStrings(row?.leadPainterId)}
+                                            {handleNullStrings(`${row?.LeadPainter?.name}\n${row?.LeadPainter?.phone}`)}
                                         </TableCell>
                                     </TableRow>
                                 );

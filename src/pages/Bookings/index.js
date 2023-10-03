@@ -129,7 +129,7 @@ function EnhancedTableToolbar(props) {
         >
             {numSelected > 0 ? (
                 <Typography
-                    sx={{ flex: '1 1 100%', fontFamily: 'Clearface' }}
+                    sx={{ flex: '1 1 100%' }}
                     color="inherit"
                     variant="subtitle1"
                     component="div"
@@ -267,7 +267,7 @@ export const Bookings = () => {
                         />
                         <TableBody>
                             {data?.map((row, index) => {
-                                const isItemSelected = isSelected(row.username);
+                                const isItemSelected = isSelected(row.id);
                                 const labelId = `enhanced-table-checkbox-${index}`;
 
                                 return (
@@ -282,7 +282,7 @@ export const Bookings = () => {
                                     >
                                         <TableCell padding="checkbox">
                                             <Checkbox
-                                                onClick={(event) => { event.stopPropagation(); handleClick(event, row.username); }}
+                                                onClick={(event) => { event.stopPropagation(); handleClick(event, row.id); }}
                                                 color="primary"
                                                 checked={isItemSelected}
                                                 inputProps={{

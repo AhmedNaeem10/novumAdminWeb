@@ -366,6 +366,7 @@ export const Dashboard = () => {
                                             id={labelId}
                                             scope="row"
                                             padding="none"
+                                            align='center'
                                         >
                                             {handleNullStrings(row?.bookingPhone)}
                                         </TableCell>
@@ -376,7 +377,7 @@ export const Dashboard = () => {
                                             padding="none"
                                             align='center'
                                         >
-                                            {JSON.stringify(row?.Venue).slice(0, 10)}
+                                            <Button variant="contained" sx={{ m: 1 }}>View</Button>
                                         </TableCell>
                                         <TableCell
                                             component="th"

@@ -3,9 +3,13 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import { Card, CardHeader, CircularProgress, FormControlLabel, IconButton, MenuItem, Select, Switch, Typography } from '@mui/material';
+import { Card, CardHeader, Checkbox, CircularProgress, FormControl, FormControlLabel, IconButton, Input, InputAdornment, ListItem, ListItemButton, ListItemText, MenuItem, OutlinedInput, Radio, RadioGroup, Select, Switch, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { updateBooking } from '../../../apis';
+import AddIcon from '@mui/icons-material/Add';
+import CheckIcon from '@mui/icons-material/Check';
+
+const stages_ = ['Preparation', 'Primer', 'Painting', 'Finishing', 'Inspection']
 
 export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change, setText, setOpenFailed, setOpenSuccess, leadPainters }) => {
     const [bookingName, setBookingName] = useState("");
@@ -20,7 +24,7 @@ export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change,
     const [bathrooms, setBathrooms] = useState("");
     const [rooms, setRooms] = useState("");
     const [address, setAdress] = useState("");
-    const [isInterior, setIsInterior] = useState();
+    const [isInterior, setIsInterior] = useState("interior");
     const [type, setVenueType] = useState("");
     const [bookingStatus, setBookingStatus] = useState("");
     const [projectStatus, setProjectStatus] = useState("");
@@ -30,8 +34,11 @@ export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change,
     const [leadPainter, setLeadPainter] = useState("");
     const [bill, setBill] = useState("");
     const [productSpecification, setProductSpecification] = useState("");
-
+    const [stages, setStages] = useState(stages_);
+    const [checked, setChecked] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [addStage, setAddStage] = useState(false);
+    const [newStage, setNewStage] = useState("");
 
     useEffect(() => {
         setBookingLocation(data?.Venue?.location);
@@ -46,7 +53,7 @@ export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change,
         setBathrooms(data?.Venue?.bathrooms);
         setRooms(data?.Venue?.rooms);
         setAdress(data?.Venue?.address);
-        setIsInterior(data?.Venue?.isInterior);
+        setIsInterior(data?.Venue?.isInterior ? "interior" : "exterior");
         setVenueType(data?.Venue?.venueType || 'Select Venue Type')
         setBookingStatus(data?.bookingStatus || 'Booking Status')
         setProjectStatus(data?.projectStatus || 'Project Status');
@@ -76,7 +83,8 @@ export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change,
             leadPainterId: typeof (leadPainter) == 'string' ? null : leadPainter,
             bill,
             productSpecification,
-            isInterior,
+            isInterior: isInterior == "interior",
+            stages: checked,
             venue: {
                 id: data?.Venue?.id,
                 venueType: type,
@@ -87,7 +95,7 @@ export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change,
                 lounges,
                 kitchens,
                 bathrooms,
-                isInterior,
+                isInterior: isInterior == "interior",
                 address
             }
         }
@@ -111,9 +119,28 @@ export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change,
         setVenueType(event.target.value)
     }
 
+    const handleStageChange = (stage) => {
+        if (checked.includes(stage)) {
+            let copyChecked = [...checked];
+            copyChecked.splice(checked.indexOf(stage), 1)
+            setChecked(copyChecked);
+        } else {
+            let copyChecked = [...checked];
+            copyChecked.push(stage)
+            setChecked(copyChecked);
+        }
+    }
+
+    const handleAddStage = () => {
+        setStages([...stages, newStage])
+        setChecked([...checked, newStage])
+        setNewStage("");
+        setAddStage(false)
+    }
+
     return (
 
-        <Card sx={{ padding: 2, width: "80%" }}>
+        <Card sx={{ padding: 2, width: "80%", height: '95vh', overflowY: "scroll" }}>
             <CardHeader
                 action={
                     <IconButton aria-label="settings"
@@ -356,62 +383,124 @@ export const ManageBooking = ({ setData, data, closeBackdrop, setChange, change,
                                 setProductSpecification(e.target.value);
                             }}
                         />
-                        <FormControlLabel sx={{ ml: 5 }} control={<Switch value={isInterior} checked={isInterior}
-                            onChange={(e) => { setIsInterior(e.target.checked) }} />} label="Interior/Exterior" />
+                        <div style={{ display: "flex", flexDirection: "row" }}>
+                            <RadioGroup value={isInterior} onChange={(e) => { setIsInterior(e.target.value) }}>
+                                <FormControlLabel value="interior" onChange={() => { setIsInterior("interior") }} control={<Radio />} label="Interior" />
+                                <FormControlLabel value="exterior" onChange={() => { setIsInterior("exterior") }} control={<Radio />} label="Exterior" />
+                            </RadioGroup>
+                        </div>
+                        {/* <FormControlLabel sx={{ ml: 5 }} control={<Switch value={isInterior} checked={isInterior}
+                            onChange={(e) => { setIsInterior(e.target.checked) }} />} label="Interior/Exterior" /> */}
                     </div>
                     <div style={{ display: "flex", flexDirection: 'row', alignItems: "center", justifyContent: 'space-between' }}>
-                        <div>
-                            <Typography variant='h6' sx={{ mt: 2 }}>Status</Typography>
-                            <div style={{ display: "flex", flexDirection: 'row', alignItems: "center" }}>
-                                <Select
-                                    defaultValue='Booking Status'
-                                    value={bookingStatus}
-                                    onChange={(e) => setBookingStatus(e.target.value)}
-                                    variant="outlined"
-                                    inputProps={{ 'aria-label': 'language' }}
-                                    sx={{
-                                        m: 1,
-                                        color: 'black',
-                                        '& .MuiSelect-select': {
-                                            '&:focus': {
-                                                backgroundColor: 'transparent',
+                        <div style={{ display: "flex", flexDirection: "row" }}>
+                            <div>
+                                <Typography variant='h6' sx={{ mt: 2 }}>Status</Typography>
+                                <div style={{ display: "flex", flexDirection: 'row', alignItems: "center" }}>
+                                    <FormControl>
+                                        <Select
+                                            defaultValue='Booking Status'
+                                            value={bookingStatus}
+                                            onChange={(e) => setBookingStatus(e.target.value)}
+                                            variant="outlined"
+                                            inputProps={{ 'aria-label': 'language' }}
+                                            label='Booking Status'
+                                            sx={{
+                                                m: 1,
+                                            }}
+                                        >
+                                            <MenuItem value='Booking Status' disabled>Booking Status</MenuItem>
+                                            {['Pending', 'Confirmed'].map((venueType) => (
+                                                <MenuItem key={venueType} value={venueType}>
+                                                    {venueType}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <Select
+                                        defaultValue='Project Status'
+                                        value={projectStatus}
+                                        onChange={(e) => setProjectStatus(e.target.value)}
+                                        variant="outlined"
+                                        inputProps={{ 'aria-label': 'language' }}
+                                        label='Project Status'
+                                        sx={{
+                                            m: 1,
+                                            color: 'black',
+                                            '& .MuiSelect-select': {
+                                                '&:focus': {
+                                                    backgroundColor: 'transparent',
+                                                },
                                             },
-                                        },
-                                    }}
-                                >
-                                    <MenuItem value='Booking Status' disabled>Booking Status</MenuItem>
-                                    {['Pending', 'Confirmed'].map((venueType) => (
-                                        <MenuItem key={venueType} value={venueType}>
-                                            {venueType}
-                                        </MenuItem>
-                                    ))}
-                                    {/* Add more language options as needed */}
-                                </Select>
-                                <Select
-                                    defaultValue='Project Status'
-                                    value={projectStatus}
-                                    onChange={(e) => setProjectStatus(e.target.value)}
-                                    variant="outlined"
-                                    inputProps={{ 'aria-label': 'language' }}
-                                    sx={{
-                                        m: 1,
-                                        color: 'black',
-                                        '& .MuiSelect-select': {
-                                            '&:focus': {
-                                                backgroundColor: 'transparent',
-                                            },
-                                        },
-                                    }}
-                                >
-                                    <MenuItem value='Project Status' disabled>Project Status</MenuItem>
-                                    {['Ongoing', 'Completed'].map((venueType) => (
-                                        <MenuItem key={venueType} value={venueType}>
-                                            {venueType}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
+                                        }}
+                                    >
+                                        <MenuItem value='Project Status' disabled>Project Status</MenuItem>
+                                        {['Ongoing', 'Completed'].map((venueType) => (
+                                            <MenuItem key={venueType} value={venueType}>
+                                                {venueType}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+                            <div style={{ marginLeft: 20 }}>
+                                <Typography variant='h6' sx={{ mt: 2 }}>Stages</Typography>
+                                <FormControl>
+                                    <Select
+                                        defaultValue='Project Stages'
+                                        value={'Project Stages'}
+                                        label='Project Stages'
+                                        sx={{
+                                            mt: 1,
+                                        }}
+                                    >
+                                        <MenuItem value='Project Stages' disabled>Project Stages</MenuItem>
+                                        {stages?.map((stage, key) => (
+                                            <div onClickCapture={(e) => { handleStageChange(stage) }}>
+                                                <ListItem
+                                                    key={key}
+                                                    secondaryAction={
+                                                        <Checkbox
+                                                            edge="end"
+                                                            checked={checked.includes(stage)}
+                                                        />
+                                                    }
+                                                    disablePadding
+                                                >
+                                                    <ListItemButton>
+                                                        <ListItemText primary={stage} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            </div>
+                                        ))}
+                                        <ListItem>
+                                            {
+                                                addStage ?
+                                                    <OutlinedInput placeholder='Enter Stage' value={newStage} endAdornment={
+                                                        <InputAdornment position="end">
+                                                            <IconButton
+                                                                aria-label="toggle password visibility"
+                                                                onClick={handleAddStage}
+                                                                edge="end"
+                                                                size='10'
+                                                                color='primary'
+                                                            >
+                                                                <CheckIcon />
+                                                            </IconButton>
+                                                        </InputAdornment>
+                                                    }
+                                                        onChange={(e) => { setNewStage(e.target.value) }}
+                                                    /> :
+                                                    <Button onClick={() => { setAddStage(true) }}>
+                                                        <AddIcon fontSize='30' sx={{ mr: 1 }} />Add Stage
+                                                    </Button>
+                                            }
+                                        </ListItem>
+                                    </Select>
+                                </FormControl>
                             </div>
                         </div>
+
                         <div>
                             <Typography variant='h6' sx={{ mt: 2, ml: 1 }}>Lead Painter</Typography>
                             <Select
